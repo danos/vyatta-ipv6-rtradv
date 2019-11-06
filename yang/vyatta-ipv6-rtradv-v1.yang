@@ -1,0 +1,152 @@
+module vyatta-ipv6-rtradv-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-ipv6-rtradv:1";
+	prefix vyatta-ipv6-rtradv-v1;
+
+	import vyatta-ipv6-rtradv-groups-v1 {
+		prefix ipv6-rtradv-grp;
+	}
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-bridge-v1 {
+		prefix interfaces-bridge;
+	}
+	import vyatta-interfaces-dataplane-v1 {
+		prefix interfaces-dataplane;
+	}
+	import vyatta-interfaces-l2tpeth-v1 {
+		prefix interfaces-l2tpeth;
+	}
+	import vyatta-interfaces-loopback-v1 {
+		prefix interfaces-loopback;
+	}
+	import vyatta-interfaces-openvpn-v1 {
+		prefix interfaces-openvpn;
+	}
+	import vyatta-interfaces-tunnel-v1 {
+		prefix interfaces-tunnel;
+	}
+	import vyatta-interfaces-bonding-v1 {
+		prefix interfaces-bonding;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		         Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2019, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or without
+		 modification, are permitted provided that the following conditions
+		 are met:
+
+		 1. Redistributions of source code must retain the above copyright
+		    notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+		    copyright notice, this list of conditions and the following
+		    disclaimer in the documentation and/or other materials provided
+		    with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+		    contributors may be used to endorse or promote products derived
+		    from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 The YANG module for vyatta-ipv6-rtradv-v1";
+
+	revision 2017-03-08 {
+		description "Allow IPv6 to be disabled for loopback interfaces";
+	}
+
+	revision 2016-09-08 {
+		description "Reinstate prefix-lifetime, but mark it as obsolete";
+	}
+
+	revision 2016-09-01 {
+		description "Migrate groupings and typedefs into a separate module
+			(vyatta-ipv6-rtradv-groups-v1.yang)";
+	}
+
+	revision 2016-08-25 {
+		description "Refactor groupings to support system (host) interfaces";
+	}
+
+	revision 2016-04-20 {
+		description "Deprecate router-advert for loopback interfaces";
+	}
+
+	revision 2015-08-14 {
+		description "Initial revision of version 1.";
+	}
+
+	typedef prefix-lifetime {
+		status obsolete;
+		type ipv6-rtradv-grp:prefix-lifetime;
+	}
+
+	augment /if:interfaces/interfaces-bridge:bridge/interfaces-bridge:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:vif/interfaces-dataplane:ipv6 {
+		uses ipv6-rtradv-grp:vif-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-l2tpeth:l2tpeth/interfaces-l2tpeth:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+	augment /if:interfaces/interfaces-l2tpeth:l2tpeth/interfaces-l2tpeth:vif/interfaces-l2tpeth:ipv6 {
+		uses ipv6-rtradv-grp:vif-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-loopback:loopback/interfaces-loopback:ipv6 {
+		uses ipv6-rtradv-grp:if-disable-forwarding;
+		uses ipv6-rtradv-grp:if-dup-addr-detect-transmits;
+		uses ipv6-rtradv-grp:if-router-advert {
+			status deprecated;
+		}
+		uses ipv6-rtradv-grp:if-address;
+		uses ipv6-rtradv-grp:if-disable;
+	}
+
+	augment /if:interfaces/interfaces-openvpn:openvpn/interfaces-openvpn:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-tunnel:tunnel/interfaces-tunnel:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-bonding:bonding/interfaces-bonding:ipv6 {
+		uses ipv6-rtradv-grp:if-ipv6-parameters;
+	}
+
+	augment /if:interfaces/interfaces-bonding:bonding/interfaces-bonding:vif/interfaces-bonding:ipv6 {
+		uses ipv6-rtradv-grp:vif-ipv6-parameters;
+	}
+}

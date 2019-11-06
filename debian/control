@@ -1,0 +1,44 @@
+Source: vyatta-ipv6-rtradv
+Section: contrib/net
+Priority: optional
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-Depends: debhelper (>= 9), autotools-dev, autoconf, automake, cpio
+Standards-Version: 3.9.8
+
+Package: vyatta-ipv6-rtradv
+Architecture: all
+Depends: sed (>= 4.1.5),
+ perl (>= 5.8.8),
+ libnet-ip-perl,
+ procps (>= 1:3.2.7-3),
+ vyatta-cfg (>= 0.15.33),
+ radvd,
+ ${misc:Depends}
+Suggests: util-linux (>= 2.13-5),
+Description: Vyatta config and op mode templates for IPv6 Router Advertisements
+ Vyatta config and op mode templates for Router Advertisements
+
+Package: vyatta-ipv6-rtradv-groups-v1-yang
+Architecture: all
+Depends:
+ vyatta-ipv6-rtradv,
+ ${misc:Depends}, ${yang:Depends}
+Description: vyatta-ipv6-rtradv-groups-v1 module
+ Support groupings for vyatta-ipv6-rtradv-v1
+
+Package: vyatta-ipv6-rtradv-v1-yang
+Architecture: all
+Depends:
+ vyatta-ipv6-rtradv-groups-v1-yang,
+ vyatta-interfaces-bonding-v1-yang,
+ vyatta-interfaces-bridge-v1-yang,
+ vyatta-interfaces-dataplane-v1-yang,
+ vyatta-interfaces-l2tpeth-v1-yang,
+ vyatta-interfaces-loopback-v1-yang,
+ vyatta-interfaces-openvpn-v1-yang,
+ vyatta-interfaces-tunnel-v1-yang,
+ vyatta-interfaces-v1-yang,
+ vyatta-ipv6-rtradv (>= ${source:Version}),
+ ${misc:Depends}
+Description: vyatta-ipv6-rtradv-v1 module
+ The YANG module for vyatta-ipv6-rtradv-v1

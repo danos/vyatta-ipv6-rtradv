@@ -1,0 +1,360 @@
+module vyatta-ipv6-rtradv-groups-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-ipv6-rtradv-groups:1";
+	prefix vyatta-ipv6-rtradv-groups-v1;
+
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		         Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2019, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Copyright (c) 2016-2017 by Brocade Communications Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or without
+		 modification, are permitted provided that the following conditions
+		 are met:
+
+		 1. Redistributions of source code must retain the above copyright
+		    notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+		    copyright notice, this list of conditions and the following
+		    disclaimer in the documentation and/or other materials provided
+		    with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+		    contributors may be used to endorse or promote products derived
+		    from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Shared YANG groupings for vyatta-ipv6-rtradv-v1";
+
+	revision 2017-04-14 {
+		description "Configure DAD transmits in kernel only if IPv6 conf for interface in /proc exists";
+	}
+
+	revision 2016-10-17 {
+		description "Allow IPv6 to be disabled per interface";
+	}
+
+	revision 2016-09-01 {
+		description "Initial revision of version 1.";
+	}
+
+	typedef prefix-lifetime {
+		type union {
+			type enumeration {
+				enum "infinity";
+			}
+			type uint32 {
+				range 0..max;
+			}
+		}
+	}
+
+	grouping address-opts {
+		leaf-list eui64 {
+			type types:ipv6-prefix {
+				pattern "[0-9a-fA-F]{1,4}(:[0-9a-fA-F]{1,4}){0,3}(::|(:0){4})/64" {
+					error-message "Must be a valid prefix of length 64";
+				}
+			}
+			ordered-by "user";
+			configd:help "Assign IPv6 address using EUI-64 based on MAC address";
+			configd:create "/opt/vyatta/sbin/vyatta-ipv6-eui64.pl  --create $VAR(../../../@) $VAR(@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-eui64.pl  --delete $VAR(../../../@) $VAR(@)";
+		}
+		leaf autoconf {
+			type empty;
+			configd:help "Enable acquisition of IPv6 address using stateless autoconfig";
+			configd:update "/opt/vyatta/sbin/vyatta-ipv6-autoconf.sh update  $VAR(../../../@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-autoconf.sh delete  $VAR(../../../@)";
+		}
+		leaf link-local {
+			type types:ipv6-address;
+			configd:help "Set IPv6 link-local address";
+			configd:update "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --update $VAR(../../../@) $VAR(@) --verbose";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --delete $VAR(../../../@) $VAR(@) --verbose";
+		}
+	}
+
+	grouping ra-parameters {
+		leaf retrans-timer {
+			type uint32;
+			configd:help "Value to place in \"Retrans Timer\" field in RAs.";
+			default "0";
+		}
+		leaf link-mtu {
+			type uint32 {
+				range "0|1280..9000";
+			}
+			configd:help "Value of link MTU to place in RAs";
+			default "0";
+		}
+		leaf min-interval {
+			type uint32 {
+				range 3..1350;
+			}
+			configd:help "Minimum interval between unsolicited multicast RAs";
+		}
+		leaf default-preference {
+			type enumeration {
+				enum "low" {
+					configd:help "Default router is low preference";
+				}
+				enum "medium" {
+					configd:help "Default router is medium preference (Default)";
+				}
+				enum "high" {
+					configd:help "Default router is high preference";
+				}
+			}
+			configd:help "Default router preference";
+		}
+		list prefix {
+			configd:help "IPv6 prefix to be advertised in Router Advertisements (RAs)";
+			key "tagnode";
+			leaf tagnode {
+				type types:ipv6-prefix;
+				configd:help "IPv6 prefix to be advertised in Router Advertisements (RAs)";
+			}
+			leaf on-link-flag {
+				type boolean;
+				configd:help "Flag that prefix can be used for on-link determination";
+				default "true";
+			}
+			leaf preferred-lifetime {
+				type prefix-lifetime;
+				configd:help "Time in seconds or infinity that the prefix will remain preferred";
+			}
+			leaf autonomous-flag {
+				type boolean;
+				configd:help "Whether prefix can be used for address auto-configuration";
+				default "true";
+			}
+			leaf valid-lifetime {
+				type prefix-lifetime;
+				configd:help "Time in seconds or infinity that the prefix will remain valid";
+				default "2592000";
+			}
+		}
+		leaf cur-hop-limit {
+			type uint32 {
+				range 0..255;
+			}
+			configd:help "Value to be placed in the \"Current Hop Limit\" field in RAs";
+			default "64";
+		}
+		leaf max-interval {
+			type uint32 {
+				range 4..1800;
+			}
+			configd:help "Maximum interval between unsolicited multicast RAs";
+			default "600";
+		}
+		leaf managed-flag {
+			type boolean;
+			configd:help "Value for \"managed address configuration\" flag in RAs";
+			default "false";
+		}
+		leaf send-advert {
+			type boolean;
+			configd:help "Enable/disable sending RAs";
+			default "true";
+		}
+		leaf default-lifetime {
+			type uint32 {
+				range "0|4..9000";
+			}
+			configd:help "Value to be placed in \"Router Lifetime\" field in RAs";
+		}
+		leaf reachable-time {
+			type uint32 {
+				range 0..3600000;
+			}
+			configd:help "Value to be placed in \"Reachable Time\" field in RAs";
+			default "0";
+		}
+		leaf other-config-flag {
+			type boolean;
+			configd:help "Value to be placed in the \"other configuration\" flag in RAs";
+			default "false";
+		}
+	}
+
+	grouping if-disable-forwarding {
+		leaf disable-forwarding {
+			configd:priority "501";
+			type empty;
+			configd:help "Disable IPv6 forwarding on this interface";
+			configd:create "/opt/vyatta/sbin/vyatta-ipv6-forwarding.sh create $VAR(../../@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-forwarding.sh delete $VAR(../../@)";
+		}
+	}
+
+	grouping if-dup-addr-detect-transmits {
+		leaf dup-addr-detect-transmits {
+			configd:priority "501";
+			type uint32 {
+				range 0..max;
+			}
+			configd:help "Number of NS messages to send while performing DAD";
+			configd:update "perl -e 'system \"sysctl -qw net/ipv6/conf/$VAR(../../@)/dad_transmits=$VAR(@)\" if -d \"/proc/sys/net/ipv6/conf/$VAR(../../@)\"'";
+			default "1";
+		}
+	}
+
+	grouping if-router-advert {
+		container router-advert {
+			presence "true";
+			configd:priority "501";
+			configd:help "Configure parameters for sending Router Advertisements (RAs)";
+			configd:end "/opt/vyatta/sbin/vyatta-ipv6-rtradv.sh $VAR(../../@)";
+			uses ra-parameters;
+		}
+	}
+
+	grouping if-address {
+		container address {
+			presence "true";
+			configd:help "IPv6 address auto-configuration modes";
+			uses address-opts;
+		}
+	}
+
+	grouping if-disable {
+		leaf disable {
+			configd:priority "501";
+			type empty;
+			description "Disable IPv6 on this interface";
+			configd:help "Disable IPv6 on this interface";
+			configd:create "/opt/vyatta/sbin/vyatta-ipv6-disable create $VAR(../../@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-disable delete $VAR(../../@)";
+		}
+	}
+
+	grouping if-ipv6-parameters-host {
+		description "IPv6 attributes shared between host interfaces and forwarding interfaces";
+		uses if-dup-addr-detect-transmits;
+		uses if-address;
+		uses if-disable;
+	}
+
+	grouping if-ipv6-parameters {
+		description "IPv6 attributes for forwarding interfaces";
+		uses if-disable-forwarding;
+		uses if-dup-addr-detect-transmits;
+		uses if-router-advert;
+		uses if-address;
+		uses if-disable;
+	}
+
+	grouping vif-ipv6-disable-forwarding {
+		leaf disable-forwarding {
+			configd:priority "501";
+			type empty;
+			description "Disable IPv6 forwarding on this interface";
+			configd:help "Disable IPv6 forwarding on this interface";
+			configd:create "/opt/vyatta/sbin/vyatta-ipv6-forwarding.sh create $VAR(../../../@).$VAR(../../@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-forwarding.sh delete $VAR(../../../@).$VAR(../../@)";
+		}
+	}
+
+	grouping vif-router-advert {
+		container router-advert {
+			description "Configuration parameters for sending Router Advertisements (RAs)";
+			presence "One or more RA parameters defined";
+			configd:priority "501";
+			configd:help "Configure parameters for sending Router Advertisements (RAs)";
+			configd:end "/opt/vyatta/sbin/vyatta-ipv6-rtradv.sh $VAR(../../../@).$VAR(../../@)";
+			uses ra-parameters;
+		}
+	}
+
+	grouping vif-dup-addr-detect-transmits {
+		leaf dup-addr-detect-transmits {
+			configd:priority "501";
+			type uint32 {
+				range 0..max;
+			}
+			description "Number of NS messages to send while performing DAD";
+			configd:help "Number of NS messages to send while performing DAD";
+			configd:update "perl -e 'system \"sysctl -qw net/ipv6/conf/$VAR(../../../@).$VAR(../../@)/dad_transmits=$VAR(@)\" if -d \"/proc/sys/net/ipv6/conf/$VAR(../../../@).$VAR(../../@)\"'";
+			default "1";
+		}
+	}
+
+	grouping vif-address {
+		container address {
+			description "IPv6 address auto-configuration modes";
+			presence "One or more addressing options selected";
+			configd:help "IPv6 address auto-configuration modes";
+			uses address-opts {
+				refine eui64 {
+					configd:create "/opt/vyatta/sbin/vyatta-ipv6-eui64.pl  --create $VAR(../../../../@).$VAR(../../../@) $VAR(@)";
+					configd:delete "/opt/vyatta/sbin/vyatta-ipv6-eui64.pl  --delete $VAR(../../../../@).$VAR(../../../@) $VAR(@)";
+				}
+				refine autoconf {
+					configd:update "/opt/vyatta/sbin/vyatta-ipv6-autoconf.sh update  $VAR(../../../../@).$VAR(../../../@)";
+					configd:delete "/opt/vyatta/sbin/vyatta-ipv6-autoconf.sh delete  $VAR(../../../../@).$VAR(../../../@)";
+				}
+				refine link-local {
+					configd:update "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --update $VAR(../../../../@).$VAR(../../../@) $VAR(@) --verbose";
+					configd:delete "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --delete $VAR(../../../../@).$VAR(../../../@) $VAR(@) --verbose";
+				}
+			}
+		}
+	}
+
+	grouping vif-disable {
+		leaf disable {
+			configd:priority "501";
+			type empty;
+			description "Disable IPv6 on this interface";
+			configd:help "Disable IPv6 on this interface";
+			configd:create "/opt/vyatta/sbin/vyatta-ipv6-disable create $VAR(../../../@).$VAR(../../@)";
+			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-disable delete $VAR(../../../@).$VAR(../../@)";
+		}
+	}
+
+	grouping vif-ipv6-parameters-host {
+		description "IPv6 attributes for use on host sub-interfaces";
+		uses vif-dup-addr-detect-transmits;
+		uses vif-address;
+		uses vif-disable;
+	}
+
+	grouping vif-ipv6-parameters {
+		description "IPv6 attributes for use on forwarding sub-interfaces";
+		uses vif-ipv6-disable-forwarding;
+		uses vif-dup-addr-detect-transmits;
+		uses vif-router-advert;
+		uses vif-address;
+		uses vif-disable;
+	}
+}
