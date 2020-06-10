@@ -29,6 +29,9 @@ module vyatta-ipv6-rtradv-v1 {
 	import vyatta-interfaces-bonding-v1 {
 		prefix interfaces-bonding;
 	}
+	import vyatta-interfaces-switch-v1 {
+		prefix interfaces-switch;
+	}
 
 	organization "AT&T Inc.";
 	contact
@@ -38,7 +41,7 @@ module vyatta-ipv6-rtradv-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2019, AT&T Intellectual Property.
+		"Copyright (c) 2019-2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
@@ -74,6 +77,10 @@ module vyatta-ipv6-rtradv-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 The YANG module for vyatta-ipv6-rtradv-v1";
+
+	revision 2020-06-11 {
+		description "Allow router-advert config on switch vif interfaces";
+	}
 
 	revision 2017-03-08 {
 		description "Allow IPv6 to be disabled for loopback interfaces";
@@ -147,6 +154,9 @@ module vyatta-ipv6-rtradv-v1 {
 	}
 
 	augment /if:interfaces/interfaces-bonding:bonding/interfaces-bonding:vif/interfaces-bonding:ipv6 {
+		uses ipv6-rtradv-grp:vif-ipv6-parameters;
+	}
+	augment /if:interfaces/interfaces-switch:switch/interfaces-switch:vif/interfaces-switch:ipv6 {
 		uses ipv6-rtradv-grp:vif-ipv6-parameters;
 	}
 }
