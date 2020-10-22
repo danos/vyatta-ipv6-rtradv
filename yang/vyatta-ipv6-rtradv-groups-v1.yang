@@ -13,11 +13,11 @@ module vyatta-ipv6-rtradv-groups-v1 {
 	contact
 		"AT&T
 		 Postal: 208 S. Akard Street
-		         Dallas, TX 25202
+		         Dallas, TX 75202
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2019, AT&T Intellectual Property.
+		"Copyright (c) 2019-2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Copyright (c) 2016-2017 by Brocade Communications Systems, Inc.
@@ -53,6 +53,10 @@ module vyatta-ipv6-rtradv-groups-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 Shared YANG groupings for vyatta-ipv6-rtradv-v1";
+
+	revision 2020-10-22 {
+		description "Link-scoped unicast addresses must be configured using fe80::/10";
+	}
 
 	revision 2017-04-14 {
 		description "Configure DAD transmits in kernel only if IPv6 conf for interface in /proc exists";
@@ -96,7 +100,11 @@ module vyatta-ipv6-rtradv-groups-v1 {
 			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-autoconf.sh delete  $VAR(../../../@)";
 		}
 		leaf link-local {
-			type types:ipv6-address;
+			type types:ipv6-address {
+				pattern "[fF][eE][89aAbB].*" {
+					error-message "Must be constructed using the link-local prefix fe80::/10";
+				}
+			}
 			configd:help "Set IPv6 link-local address";
 			configd:update "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --update $VAR(../../../@) $VAR(@) --verbose";
 			configd:delete "/opt/vyatta/sbin/vyatta-ipv6-link-local.pl --delete $VAR(../../../@) $VAR(@) --verbose";
