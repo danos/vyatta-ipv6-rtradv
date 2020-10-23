@@ -1,3 +1,9 @@
+vyatta-ipv6-rtradv (1.32) unstable; urgency=medium
+
+  * Unacceptable IPv6 link-local addresses pass validation but fail commit
+
+ -- Mike Manning <mmanning@vyatta.att-mail.com>  Fri, 23 Oct 2020 12:54:02 +0100
+
 vyatta-ipv6-rtradv (1.31) unstable; urgency=medium
 
   [ Shweta Choudaha ]
