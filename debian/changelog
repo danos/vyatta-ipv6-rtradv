@@ -1,3 +1,10 @@
+vyatta-ipv6-rtradv (1.33) unstable; urgency=medium
+
+  * Run perltidy -ce on link-local script
+  * Configuring IPv6 link-local address must remove the EUI64 link-local
+
+ -- Mike Manning <mmanning@vyatta.att-mail.com>  Fri, 12 Mar 2021 18:14:35 +0000
+
 vyatta-ipv6-rtradv (1.32) unstable; urgency=medium
 
   * Unacceptable IPv6 link-local addresses pass validation but fail commit
