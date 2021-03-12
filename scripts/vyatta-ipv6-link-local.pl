@@ -3,7 +3,7 @@
 # Module: vyatta-ipv6-link-local.pl
 #
 # **** License ****
-# Copyright (c) 2017-2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2017-2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2015 by Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -20,8 +20,8 @@
 # for the interface will be deleted.
 #
 # The second form removes configured link-local address.
-# This will result in link-local address to be autoconfigured if 
-# ipv6 is already enabled. 
+# This will result in link-local address to be autoconfigured if
+# ipv6 is already enabled.
 #
 
 use strict;
@@ -39,7 +39,7 @@ my $verbose = '';
 GetOptions(
     "update=s{2}" => \@update,
     "delete=s{2}" => \@delete,
-    "verbose" => \$verbose,
+    "verbose"     => \$verbose,
 ) or usage();
 
 update_ll_addr(@update) if (@update);
@@ -77,9 +77,9 @@ sub update_ll_addr {
 
     my $ip = new Net::IP($address);
 
-    my $type = ($ip->iptype());
+    my $type = ( $ip->iptype() );
     die "Error: not a valid link-local IPv6 address: $address"
-      if ($type ne "LINK-LOCAL-UNICAST");
+      if ( $type ne "LINK-LOCAL-UNICAST" );
 
     my $intf = new Vyatta::Interface($ifname);
     $intf or die "Unknown interface name/type: $ifname\n";
@@ -88,11 +88,11 @@ sub update_ll_addr {
     my @ll_addr_line =
       grep /net6/, qx(${cmd_prefix}ip -6 addr show dev $ifname scope link);
 
-    for (my $i=0; $i <=$#ll_addr_line; $i++) {
+    for ( my $i = 0 ; $i <= $#ll_addr_line ; $i++ ) {
 
-        my @addr_line = split(' ', $ll_addr_line[$i]);
-        my $ll_addr =  $addr_line[1];
-        if ( system("${cmd_prefix}ip -6 addr del $ll_addr dev $ifname") != 0) {
+        my @addr_line = split( ' ', $ll_addr_line[$i] );
+        my $ll_addr = $addr_line[1];
+        if ( system("${cmd_prefix}ip -6 addr del $ll_addr dev $ifname") != 0 ) {
             warn "Delete $ll_addr on $ifname failed \n";
         }
     }
@@ -104,6 +104,7 @@ sub update_ll_addr {
 
     exit 0;
 }
+
 sub get_mac_address {
     my $ifname = shift;
 
@@ -165,7 +166,7 @@ sub get_eui64_address {
     }
 
     # Form 128-bit IPv6 addr based by adding the host part to the prefix
-    my $eui64suffix = new Net::IP("::" . join ":", @eui64);
+    my $eui64suffix = new Net::IP( "::" . join ":", @eui64 );
     my $ipv6_addr = $ip->binadd($eui64suffix);
     return $ipv6_addr->ip . "/64";
 }
@@ -180,13 +181,15 @@ sub delete_ll_addr {
     if ( system("${cmd_prefix}ip -6 addr del $address/64 dev $ifname") != 0 ) {
         warn "IPv6 address $address on $ifname delete failed \n";
     }
-    if (ipv6_disabled($ifname)) {
-        print "IPv6 disabled: $ifname, Link-local will be autoconfigured when IPv6 is enabled";
+    if ( ipv6_disabled($ifname) ) {
+        print
+"IPv6 disabled: $ifname, Link-local will be autoconfigured when IPv6 is enabled";
     } else {
         my $prefix = ("fe80::/64");
         my $ipv6_addr = get_eui64_address( $ifname, $prefix );
 
-        if ( system("${cmd_prefix}ip -6 addr add $ipv6_addr dev $ifname") != 0 ) {
+        if ( system("${cmd_prefix}ip -6 addr add $ipv6_addr dev $ifname") != 0 )
+        {
             warn "IPv6 address $ipv6_addr configuration on $ifname failed \n";
         } elsif ($verbose) {
             print "$ipv6_addr link-local address autoconfigured on $ifname \n";
