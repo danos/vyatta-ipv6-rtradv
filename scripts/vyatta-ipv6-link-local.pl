@@ -31,6 +31,11 @@ use Getopt::Long;
 use Net::IP;
 use Vyatta::Interface;
 
+use constant {
+    EUI64 => 0,
+    NONE  => 1
+};
+
 my @update;
 my @delete;
 
@@ -68,6 +73,18 @@ sub ipv6_disabled {
     return $disabled eq '1';
 }
 
+# Set addr generation mode for IPv6 link-local addrs for when intf next comes up
+sub ipv6_addr_gen_mode {
+    my ( $name, $mode ) = @_;
+
+    open my $f, '>', "/proc/sys/net/ipv6/conf/$name/addr_gen_mode"
+      or return;
+    print $f $mode;
+    close $f;
+
+    return;
+}
+
 sub update_ll_addr {
     my ( $ifname, $address ) = @_;
 
@@ -99,6 +116,7 @@ sub update_ll_addr {
     if ( system("${cmd_prefix}ip -6 addr add $address/64 dev $ifname") != 0 ) {
         warn "IPv6 address $address on $ifname add failed \n";
     } elsif ($verbose) {
+        ipv6_addr_gen_mode( $ifname, NONE );
         print "$address replaced any other link-local addresses on $ifname \n";
     }
 
@@ -181,6 +199,7 @@ sub delete_ll_addr {
     if ( system("${cmd_prefix}ip -6 addr del $address/64 dev $ifname") != 0 ) {
         warn "IPv6 address $address on $ifname delete failed \n";
     }
+    ipv6_addr_gen_mode( $ifname, EUI64 );
     if ( ipv6_disabled($ifname) ) {
         print
 "IPv6 disabled: $ifname, Link-local will be autoconfigured when IPv6 is enabled";
