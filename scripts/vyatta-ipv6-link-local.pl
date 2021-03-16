@@ -87,20 +87,18 @@ sub update_ll_addr {
 
     my $intf = new Vyatta::Interface($ifname);
     $intf or die "Unknown interface name/type: $ifname\n";
-    my $cmd_prefix =
-      $intf->can("vrf_cmd_prefix") ? $intf->vrf_cmd_prefix() : "";
     my @ll_addr_line =
-      grep /net6/, qx(${cmd_prefix}ip -6 addr show dev $ifname scope link);
+      grep /net6/, qx(ip -6 addr show dev $ifname scope link);
 
     for ( my $i = 0 ; $i <= $#ll_addr_line ; $i++ ) {
 
         my @addr_line = split( ' ', $ll_addr_line[$i] );
         my $ll_addr = $addr_line[1];
-        if ( system("${cmd_prefix}ip -6 addr del $ll_addr dev $ifname") != 0 ) {
+        if ( system("ip -6 addr del $ll_addr dev $ifname") != 0 ) {
             warn "Delete $ll_addr on $ifname failed \n";
         }
     }
-    if ( system("${cmd_prefix}ip -6 addr add $address/64 dev $ifname") != 0 ) {
+    if ( system("ip -6 addr add $address/64 dev $ifname") != 0 ) {
         warn "IPv6 address $address on $ifname add failed \n";
     } elsif ($verbose) {
         ipv6_addr_gen_mode( $ifname, NONE );
@@ -114,10 +112,8 @@ sub delete_ll_addr {
     my ( $ifname, $address ) = @_;
     my $intf = new Vyatta::Interface($ifname);
     $intf or die "Unknown interface name/type: $ifname\n";
-    my $cmd_prefix =
-      $intf->can("vrf_cmd_prefix") ? $intf->vrf_cmd_prefix() : "";
 
-    if ( system("${cmd_prefix}ip -6 addr del $address/64 dev $ifname") != 0 ) {
+    if ( system("ip -6 addr del $address/64 dev $ifname") != 0 ) {
         warn "IPv6 address $address on $ifname delete failed \n";
     }
     ipv6_addr_gen_mode( $ifname, EUI64 );
