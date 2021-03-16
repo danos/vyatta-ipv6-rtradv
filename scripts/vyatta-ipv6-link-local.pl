@@ -60,19 +60,6 @@ EOF
     exit 1;
 }
 
-# Test if IPv6 is disabled on this interface
-sub ipv6_disabled {
-    my $name = shift;
-
-    open my $f, '<', "/proc/sys/net/ipv6/conf/$name/disable_ipv6"
-      or return;
-    my $disabled = <$f>;
-    close $f;
-
-    chomp $disabled;
-    return $disabled eq '1';
-}
-
 # Set addr generation mode for IPv6 link-local addrs for when intf next comes up
 sub ipv6_addr_gen_mode {
     my ( $name, $mode ) = @_;
@@ -123,72 +110,6 @@ sub update_ll_addr {
     exit 0;
 }
 
-sub get_mac_address {
-    my $ifname = shift;
-
-    # Get 48-bit MAC addr of $ifname
-    open my $sysfs, '<', "/sys/class/net/$ifname/address"
-      or die "can't open /sys/class/net/$ifname/address: $!";
-    my $macaddr = <$sysfs>;
-    close $sysfs;
-    chomp $macaddr;
-
-    my @octets = split( ':', $macaddr );
-    die "Error: $macaddr not a 48 bit MAC address, IPv6 or IPv4 address\n"
-      unless ( $#octets == 15 || $#octets == 5 || $#octets == 3 );
-
-    return @octets;
-}
-
-sub get_eui64_address {
-    my ( $ifname, $address ) = @_;
-
-    # We expect the interface to exist and to be configured for IPv6
-    die "Error: Interface $ifname does not exist.\n"
-      unless ( -d "/proc/sys/net/ipv6/conf/$ifname" );
-
-    my $ip = new Net::IP($address);
-    die "Error: not a valid IP address: $address"
-      unless defined($ip);
-
-    my $prefix_len = $ip->prefixlen();
-    die "Error: Prefix length is $prefix_len is not 64"
-      if ( $prefix_len != 64 );
-
-    # construct the host part from the MAC address
-    my @ea = get_mac_address($ifname);
-
-    if ( $#ea == 15 ) {
-
-        # If HW address is an IPv6 address e.g. for tunnels, instead use
-        # the permanent MAC address (not persistent across reboots)
-        my $macaddr = ( split( ' ', qx(/sbin/ethtool -P $ifname) ) )[2];
-        die "Error: No permanent address found for $ifname\n"
-          unless defined($macaddr);
-        @ea = split( ':', $macaddr );
-    }
-
-    my @eui64;
-    if ( $#ea == 3 ) {
-
-        # Modified EUI-64 is constructed from the IPv4 address given
-        # in the h/w address as per RFC5342 section 2.2.1
-        @eui64 = ( "0200", "5efe", "$ea[0]$ea[1]", "$ea[2]$ea[3]" );
-    } else {
-
-        # flip locally assigned bit per RFC 2373
-        $ea[0] = sprintf( "%x", hex( $ea[0] ) ^ 0x2 );
-
-        # construct EUI64 address array
-        @eui64 = ( "$ea[0]$ea[1]", "$ea[2]ff", "fe$ea[3]", "$ea[4]$ea[5]" );
-    }
-
-    # Form 128-bit IPv6 addr based by adding the host part to the prefix
-    my $eui64suffix = new Net::IP( "::" . join ":", @eui64 );
-    my $ipv6_addr = $ip->binadd($eui64suffix);
-    return $ipv6_addr->ip . "/64";
-}
-
 sub delete_ll_addr {
     my ( $ifname, $address ) = @_;
     my $intf = new Vyatta::Interface($ifname);
@@ -200,20 +121,8 @@ sub delete_ll_addr {
         warn "IPv6 address $address on $ifname delete failed \n";
     }
     ipv6_addr_gen_mode( $ifname, EUI64 );
-    if ( ipv6_disabled($ifname) ) {
-        print
-"IPv6 disabled: $ifname, Link-local will be autoconfigured when IPv6 is enabled";
-    } else {
-        my $prefix = ("fe80::/64");
-        my $ipv6_addr = get_eui64_address( $ifname, $prefix );
-
-        if ( system("${cmd_prefix}ip -6 addr add $ipv6_addr dev $ifname") != 0 )
-        {
-            warn "IPv6 address $ipv6_addr configuration on $ifname failed \n";
-        } elsif ($verbose) {
-            print "$ipv6_addr link-local address autoconfigured on $ifname \n";
-        }
-    }
+    print "IPv6 link-local address autoconfiguration enabled on $ifname \n"
+      if $verbose;
     exit 0;
 }
 
