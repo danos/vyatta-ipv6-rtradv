@@ -1,3 +1,10 @@
+vyatta-ipv6-rtradv (1.34) unstable; urgency=medium
+
+  * Removing IPv6 LL address triggers a commit error
+  * ip address commands do not need to be run in VRF
+
+ -- Mike Manning <mmanning@vyatta.att-mail.com>  Wed, 17 Mar 2021 12:26:28 +0000
+
 vyatta-ipv6-rtradv (1.33) unstable; urgency=medium
 
   * Run perltidy -ce on link-local script
