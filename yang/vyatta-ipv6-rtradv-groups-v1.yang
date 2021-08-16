@@ -17,7 +17,7 @@ module vyatta-ipv6-rtradv-groups-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2019-2020, AT&T Intellectual Property.
+		"Copyright (c) 2019-2021, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Copyright (c) 2016-2017 by Brocade Communications Systems, Inc.
@@ -53,6 +53,10 @@ module vyatta-ipv6-rtradv-groups-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 Shared YANG groupings for vyatta-ipv6-rtradv-v1";
+
+	revision 2021-08-16 {
+		description "Add delete action for dup-addr-detect-transmits";
+	}
 
 	revision 2020-10-22 {
 		description "Link-scoped unicast addresses must be configured using fe80::/10";
@@ -232,7 +236,8 @@ module vyatta-ipv6-rtradv-groups-v1 {
 				range 0..max;
 			}
 			configd:help "Number of NS messages to send while performing DAD";
-			configd:update "perl -e 'system \"sysctl -qw net/ipv6/conf/$VAR(../../@)/dad_transmits=$VAR(@)\" if -d \"/proc/sys/net/ipv6/conf/$VAR(../../@)\"'";
+			configd:update "$(if [ -d /proc/sys/net/ipv6/conf/$VAR(../../@) ]; then sysctl -qw net/ipv6/conf/$VAR(../../@)/dad_transmits=$VAR(@); fi)";
+			configd:delete "$(if [ -d /proc/sys/net/ipv6/conf/$VAR(../../@) ]; then sysctl -qw net/ipv6/conf/$VAR(../../@)/dad_transmits=1; fi)";
 			default "1";
 		}
 	}
@@ -312,7 +317,8 @@ module vyatta-ipv6-rtradv-groups-v1 {
 			}
 			description "Number of NS messages to send while performing DAD";
 			configd:help "Number of NS messages to send while performing DAD";
-			configd:update "perl -e 'system \"sysctl -qw net/ipv6/conf/$VAR(../../../@).$VAR(../../@)/dad_transmits=$VAR(@)\" if -d \"/proc/sys/net/ipv6/conf/$VAR(../../../@).$VAR(../../@)\"'";
+			configd:update "$(if [ -d /proc/sys/net/ipv6/conf/$VAR(../../../@).$VAR(../../@) ]; then sysctl -qw net/ipv6/conf/$VAR(../../../@).$VAR(../../@)/dad_transmits=$VAR(@); fi)";
+			configd:delete "$(if [ -d /proc/sys/net/ipv6/conf/$VAR(../../../@).$VAR(../../@) ]; then sysctl -qw net/ipv6/conf/$VAR(../../../@).$VAR(../../@)/dad_transmits=1; fi)";
 			default "1";
 		}
 	}
