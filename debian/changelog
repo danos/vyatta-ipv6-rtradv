@@ -1,3 +1,9 @@
+vyatta-ipv6-rtradv (1.35) unstable; urgency=medium
+
+  * Add delete action for IPv6 DAD number of probes
+
+ -- Mike Manning <mmanning@vyatta.att-mail.com>  Thu, 19 Aug 2021 09:45:47 +0100
+
 vyatta-ipv6-rtradv (1.34) unstable; urgency=medium
 
   * Removing IPv6 LL address triggers a commit error
